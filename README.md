@@ -1,6 +1,10 @@
-# Project Background
+# ES-Dock
+
+## Project Background
 
 An embedded UI project developed using the ESP32-S3 N16R8 (16 MB Flash, 8 MB PSRAM).
+
+> This is an unofficial physical controller for a user’s existing Spotify playback device. It does not stream, store, or play Spotify audio, and it is not a Spotify Connect device.
 
 Development is currently based on VS Code, PlatformIO, and the Arduino framework; future goals include integrating a TFT LCD, touch functionality, and the LVGL graphical user interface.
 
@@ -10,7 +14,7 @@ Development is currently based on VS Code, PlatformIO, and the Arduino framework
 - 16 MB Flash configuration
 - 8 MB OPI PSRAM configuration
 - PlatformIO + Arduino development workflow
-- Serial diagnostics for Flash, PSRAM, and free heap
+- Serial startup messages, function test output, and a periodic heartbeat
 - Planned: LVGL user interface
 - Planned: TFT LCD and touch support
 - Planned: Wi-Fi configuration and device dashboard
@@ -44,9 +48,11 @@ No standalone Arduino IDE is required.
 
 ### 1. Clone the repository
 
+Clone this repository from GitHub:
+
 ```bash
-git clone https://github.com/YOUR_GITHUB_USERNAME/esp32-s3-lvgl-ui.git
-cd esp32-s3-lvgl-ui
+git clone https://github.com/Master-YCK/ES-Dock.git
+cd ES-Dock
 ```
 
 ### 2. Open with PlatformIO
@@ -79,15 +85,16 @@ pio device monitor --baud 115200
 
 ### 5. Verify the board
 
-The initial firmware reports Flash, PSRAM, free heap, and a periodic `alive` message.
+The current firmware prints startup information, tests `myFunction(2, 3)`, and
+prints a heartbeat approximately once per second.
 
 Expected output:
 
 ```text
-ESP32-S3 N16R8 ready
-Flash: 16 MB
-PSRAM: 8 MB
-alive
+ES-Dock serial ready.
+Baud rate: 115200
+Result of myFunction(2, 3): 5
+Heartbeat ms=...
 ```
 
 ## PlatformIO Configuration
@@ -97,22 +104,33 @@ The relevant configuration in `platformio.ini` is:
 ```ini
 [env:esp32-s3-n16r8]
 platform = espressif32
-board = esp32-s3-devkitm-1
+board = esp32-s3-devkitc-1
 framework = arduino
 
 board_build.flash_size = 16MB
 board_upload.flash_size = 16MB
 board_build.arduino.memory_type = qio_opi
-board_build.partitions = default_16MB.csv
+board_build.arduino.partitions = default_16MB.csv
 
 upload_speed = 460800
 monitor_speed = 115200
 
+lib_deps =
+  lvgl/lvgl@^9.2.2
+
 build_flags =
   -DBOARD_HAS_PSRAM
+  -DARDUINO_USB_MODE=1
+  -DARDUINO_USB_CDC_ON_BOOT=1
+  -D LV_COLOR_DEPTH=16
+  -D LV_FONT_MONTSERRAT_20=1
+  -D LV_FONT_MONTSERRAT_32=1
+  -D LV_FONT_MONTSERRAT_48=1x
 ```
 
-`esp32-s3-devkitm-1` is used as a compatible PlatformIO board profile for a generic ESP32-S3 N16R8 board. The Flash and PSRAM settings are explicitly overridden for the N16R8 configuration.
+`esp32-s3-devkitc-1` is used as a compatible PlatformIO board profile for a
+generic ESP32-S3 N16R8 board. The Flash and PSRAM settings are explicitly
+overridden for the N16R8 configuration.
 
 ## Upload Troubleshooting
 
@@ -165,6 +183,4 @@ Create a committed template at `include/secrets.example.h`:
 
 ## License
 
-Choose a license before publishing or accepting contributions.
-
-For an open-source hobby project, MIT is a common permissive option.
+This project is licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
