@@ -10,9 +10,9 @@ class StatusLed
 {
 public:
     static void init();
-    static void setRed();    // 無設備連線
-    static void setYellow(); // Wi-Fi 已連線，等待 App
-    static void setGreen();  // App WebSocket 已連線
+    static void setRed();    // No device connected
+    static void setYellow(); // Wi-Fi connected, waiting for the app
+    static void setGreen();  // App WebSocket connected
     static void setOff();
     static void setColor(uint8_t r, uint8_t g, uint8_t b);
 };

@@ -2,14 +2,14 @@
 #include "hardware/status_led.hpp"
 #include <FastLED.h>
 
-constexpr uint8_t BRIGHTNESS = 30; // 亮度縮放 (0~255)
+constexpr uint8_t BRIGHTNESS = 30; // Brightness scale (0-255)
 static CRGB s_led;
 
 void StatusLed::init()
 {
     FastLED.addLeds<WS2812, RGB_LED_PIN, GRB>(&s_led, 1);
     FastLED.setBrightness(BRIGHTNESS);
-    setRed(); // 開機預設紅燈
+    setRed(); // Default to red at startup
 }
 
 void StatusLed::setColor(uint8_t r, uint8_t g, uint8_t b)
@@ -25,7 +25,7 @@ void StatusLed::setRed()
 
 void StatusLed::setYellow()
 {
-    // 紅 + 綠 = 黃
+    // Red + green = yellow
     setColor(255, 200, 0);
 }
 

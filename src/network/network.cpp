@@ -27,7 +27,7 @@ struct RemoteFrameHeader
 
 static uint32_t s_frameCounter = 0;
 
-// 更新 LED 狀態的統一狀態機
+// Centralized state machine for the LED status.
 static void updateLedStatus()
 {
     const uint8_t stationCount = WiFi.softAPgetStationNum();
@@ -111,7 +111,7 @@ static void onWsEvent(AsyncWebSocket *srv, AsyncWebSocketClient *client,
     }
 }
 
-// 監聽底層 Wi-Fi 站點事件
+// Listen for low-level Wi-Fi station events.
 static void onWiFiEvent(WiFiEvent_t event)
 {
     switch (event)
@@ -136,7 +136,7 @@ void NetworkService::init()
     constexpr const char *AP_PASSWORD = "Es-Dock@test123";
     constexpr const char *AP_SSID = "ES-Dock";
 
-    // 註冊 Wi-Fi 事件處理回調
+    // Register the Wi-Fi event callback.
     WiFi.onEvent(onWiFiEvent);
 
     WiFi.mode(WIFI_AP);
@@ -146,7 +146,7 @@ void NetworkService::init()
     ws.onEvent(onWsEvent);
     server.addHandler(&ws);
     server.begin();
-    StatusLed::init(); // 初始化網路外設後，再初始化板載 LED
+    StatusLed::init(); // Initialize the onboard LED after the network peripherals.
     Serial.println("[HTTP] Server ready");
 }
 

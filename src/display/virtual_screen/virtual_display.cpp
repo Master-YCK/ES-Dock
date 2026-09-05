@@ -14,7 +14,7 @@ bool VirtualDisplay::init()
 {
     lv_init();
 
-    // 優先在 PSRAM 分配 217.5 KiB 的全螢幕 buffer；若無 PSRAM 則退回一般內部堆疊
+    // Allocate the full-screen buffer in PSRAM when available; otherwise use internal heap memory.
     if (psramFound())
     {
         s_framebuffer = (uint8_t *)heap_caps_malloc(FRAME_BUFFER_SIZE, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
@@ -31,12 +31,12 @@ bool VirtualDisplay::init()
     }
     memset(s_framebuffer, 0, FRAME_BUFFER_SIZE);
 
-    // 建立 174x640 虛擬顯示器
+    // Create a 174x640 virtual display.
     s_display = lv_display_create(LCD_WIDTH, LCD_HEIGHT);
     lv_display_set_buffers(s_display, s_framebuffer, nullptr, FRAME_BUFFER_SIZE, LV_DISPLAY_RENDER_MODE_DIRECT);
     lv_display_set_flush_cb(s_display, flushCallback);
 
-    // 建立虛擬觸控裝置
+    // Create a virtual pointer input device.
     s_indev = lv_indev_create();
     lv_indev_set_type(s_indev, LV_INDEV_TYPE_POINTER);
     lv_indev_set_read_cb(s_indev, inputReadCallback);
@@ -59,7 +59,7 @@ void VirtualDisplay::updateRemotePointer(int16_t x, int16_t y, bool pressed)
 
 void VirtualDisplay::flushCallback(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
 {
-    // 記憶體中已有最新畫面，此處直接通知 LVGL 渲染管線已就緒
+    // The framebuffer already contains the latest image, so mark the LVGL rendering pipeline as ready.
     lv_display_flush_ready(disp);
 }
 
