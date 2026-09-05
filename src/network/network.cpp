@@ -35,24 +35,16 @@ static void updateLedStatus()
     const bool webSocketConnected = webSocketCount > 0;
     const bool wifiConnected = stationCount > 0;
 
-    Serial.printf(
-        "[LED] WiFi stations: %u, WebSocket clients: %u\n",
-        static_cast<unsigned>(stationCount),
-        static_cast<unsigned>(webSocketCount));
-
     if (webSocketConnected)
     {
-        Serial.println("[LED] Setting green");
         StatusLed::setGreen();
     }
     else if (wifiConnected)
     {
-        Serial.println("[LED] Setting yellow");
         StatusLed::setYellow();
     }
     else
     {
-        Serial.println("[LED] Setting red");
         StatusLed::setRed();
     }
 }
