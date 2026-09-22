@@ -2,7 +2,7 @@
 #define LV_CONF_H
 
 /* Use 16-bit RGB565 colors, which is common for ESP32 LCD panels. */
-#define LV_COLOR_DEPTH 16
+#define LV_COLOR_FORMAT_DEFAULT LV_COLOR_FORMAT_RGB565
 
 /* Do not swap the byte order of RGB565 color values. */
 #define LV_COLOR_16_SWAP 0
@@ -15,10 +15,9 @@
 
 /***** Development options *****/
 
-/* Enable LVGL performance monitoring for future diagnostics. */
-#define LV_USE_PERF_MONITOR 1
+/* Keep optional system monitoring disabled unless its dependencies are configured. */
+#define LV_USE_PERF_MONITOR 0
 
-/* Enable LVGL memory monitoring for future diagnostics. */
-#define LV_USE_MEM_MONITOR 1
+#define LV_USE_MEM_MONITOR 0
 
 #endif /* LV_CONF_H */
