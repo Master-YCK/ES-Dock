@@ -2,7 +2,7 @@
 #include "hardware/status_led.hpp"
 #include <FastLED.h>
 
-constexpr uint8_t BRIGHTNESS = 30; // Brightness scale (0-255)
+constexpr uint8_t BRIGHTNESS = 5; // Brightness scale (0-255)
 static CRGB s_led;
 
 void StatusLed::init()
