@@ -10,12 +10,13 @@
 constexpr uint32_t SERIAL_BAUD_RATE = 115200;
 
 constexpr int8_t LCD_CS = 39;
-constexpr int8_t LCD_SCK = 40;
+constexpr int8_t LCD_SCK = 41;
 constexpr int8_t LCD_QSPI_D0 = 45;
 constexpr int8_t LCD_QSPI_D1 = 48;
 constexpr int8_t LCD_QSPI_D2 = 47;
 constexpr int8_t LCD_QSPI_D3 = 21;
 constexpr int8_t LCD_RST = 42;
+constexpr int8_t LCD_MODE = 17;
 constexpr int8_t TOUCH_SDA = 12;
 constexpr int8_t TOUCH_SCL = 16;
 constexpr uint8_t AXS15231B_I2C_ADDRESS = 0x3B;
@@ -26,7 +27,7 @@ constexpr int8_t LCD_BL = 14;
 Arduino_DataBus *lcdBus = new Arduino_ESP32QSPI(
   LCD_CS, LCD_SCK, LCD_QSPI_D0, LCD_QSPI_D1, LCD_QSPI_D2, LCD_QSPI_D3);
 Arduino_GFX *lcd = new Arduino_AXS15231B(
-  lcdBus, LCD_RST, 0, false, 180, 640);
+  lcdBus, LCD_RST, 0, false, 174, 640);
 
 bool probeAxs15231b()
 {
@@ -51,7 +52,10 @@ void setup()
   delay(1000);
 
   Serial.println("\n=== ESP32-S3 AXS15231B LCD Test ===");
-  probeAxs15231b();
+
+  // LCM_IM high selects the QSPI interface on the adapter board.
+  pinMode(LCD_MODE, OUTPUT);
+  digitalWrite(LCD_MODE, HIGH);
 
   if (!lcd->begin(20000000UL))
   {
@@ -60,8 +64,9 @@ void setup()
       delay(1000);
   }
 
-  // This panel requires inverted color output for RGB565 pixels.
-  lcd->invertDisplay(true);
+  // RST is shared by the LCD and touch controller; probe touch after the
+  // display reset sequence has completed.
+  probeAxs15231b();
 
   if (LCD_BL >= 0)
   {
