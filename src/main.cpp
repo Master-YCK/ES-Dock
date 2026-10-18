@@ -33,6 +33,24 @@ bool probeAxs15231b()
 {
   Wire.begin(TOUCH_SDA, TOUCH_SCL);
   Wire.setClock(400000);
+
+  Serial.println("[I2C] Scanning addresses...");
+  uint8_t deviceCount = 0;
+  for (uint8_t address = 1; address < 127; ++address)
+  {
+    Wire.beginTransmission(address);
+    if (Wire.endTransmission() == 0)
+    {
+      Serial.printf("[I2C] Device found at 0x%02X\n", address);
+      ++deviceCount;
+    }
+  }
+
+  if (deviceCount == 0)
+  {
+    Serial.println("[I2C] No devices found");
+  }
+
   Wire.beginTransmission(AXS15231B_I2C_ADDRESS);
   const uint8_t error = Wire.endTransmission();
 
@@ -57,7 +75,7 @@ void setup()
   pinMode(LCD_MODE, OUTPUT);
   digitalWrite(LCD_MODE, HIGH);
 
-  if (!lcd->begin(20000000UL))
+  if (!lcd->begin(10000000UL))
   {
     Serial.println("[Fatal] Physical LCD init failed. Halting.");
     while (true)
@@ -67,6 +85,7 @@ void setup()
   // RST is shared by the LCD and touch controller; probe touch after the
   // display reset sequence has completed.
   probeAxs15231b();
+  VirtualDisplay::setTouchBus(&Wire, AXS15231B_I2C_ADDRESS);
 
   if (LCD_BL >= 0)
   {
@@ -76,14 +95,18 @@ void setup()
   }
   delay(100);
 
-  // Clear any residual pixels left by the panel initialization sequence.
-  lcd->fillScreen(0x0000);
-  lcd->setCursor(5, 5);
-  lcd->setTextColor(0xFFFF, 0x0000);
-  lcd->setTextSize(2);
-  lcd->print("Hello World");
+  VirtualDisplay::setHardwareDisplay(lcd);
+  if (!VirtualDisplay::init())
+  {
+    Serial.println("[Fatal] LVGL display initialization failed. Halting.");
+    while (true)
+      delay(1000);
+  }
+  lv_tick_set_cb([]() -> uint32_t { return millis(); });
+  createDemoUI();
+  lv_timer_handler();
 
-  Serial.println("[Display] AXS15231B physical LCD test completed");
+  Serial.println("[Display] LVGL physical LCD test completed");
   NetworkService::init();
   Serial.println("[System] System ready for App connection.");
 }
@@ -91,5 +114,6 @@ void setup()
 void loop()
 {
   NetworkService::loop();
-  delay(2);
+  lv_timer_handler();
+  delay(5);
 }

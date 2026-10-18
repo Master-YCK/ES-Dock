@@ -1,6 +1,8 @@
 // src/virtual_display.hpp
 #pragma once
 #include <Arduino.h>
+#include <Arduino_GFX_Library.h>
+#include <Wire.h>
 #include <lvgl.h>
 
 constexpr uint16_t LCD_WIDTH = 174;
@@ -10,6 +12,8 @@ constexpr size_t FRAME_BUFFER_SIZE = LCD_WIDTH * LCD_HEIGHT * sizeof(lv_color16_
 class VirtualDisplay {
 public:
     static bool init();
+    static void setHardwareDisplay(Arduino_GFX* display);
+    static void setTouchBus(TwoWire* bus, uint8_t address);
     static uint8_t* getFramebuffer();
     static void updateRemotePointer(int16_t x, int16_t y, bool pressed);
 

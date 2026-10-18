@@ -1,10 +1,14 @@
 // src/display/virtual_screen/virtual_display.cpp
 #include "virtual_screen/virtual_display.hpp"
 #include <esp_heap_caps.h>
+#include <Wire.h>
 
 uint8_t *VirtualDisplay::s_framebuffer = nullptr;
 lv_display_t *VirtualDisplay::s_display = nullptr;
 lv_indev_t *VirtualDisplay::s_indev = nullptr;
+static Arduino_GFX *s_hardwareDisplay = nullptr;
+static TwoWire *s_touchBus = nullptr;
+static uint8_t s_touchAddress = 0;
 
 int16_t VirtualDisplay::s_touchX = 0;
 int16_t VirtualDisplay::s_touchY = 0;
@@ -45,6 +49,17 @@ bool VirtualDisplay::init()
     return true;
 }
 
+void VirtualDisplay::setHardwareDisplay(Arduino_GFX *display)
+{
+    s_hardwareDisplay = display;
+}
+
+void VirtualDisplay::setTouchBus(TwoWire *bus, uint8_t address)
+{
+    s_touchBus = bus;
+    s_touchAddress = address;
+}
+
 uint8_t *VirtualDisplay::getFramebuffer()
 {
     return s_framebuffer;
@@ -59,12 +74,49 @@ void VirtualDisplay::updateRemotePointer(int16_t x, int16_t y, bool pressed)
 
 void VirtualDisplay::flushCallback(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
 {
-    // The framebuffer already contains the latest image, so mark the LVGL rendering pipeline as ready.
+    if (s_hardwareDisplay)
+    {
+        const int16_t width = area->x2 - area->x1 + 1;
+        const int16_t height = area->y2 - area->y1 + 1;
+        s_hardwareDisplay->draw16bitRGBBitmap(
+            area->x1, area->y1, reinterpret_cast<uint16_t *>(px_map), width, height);
+    }
+
     lv_display_flush_ready(disp);
 }
 
 void VirtualDisplay::inputReadCallback(lv_indev_t *indev, lv_indev_data_t *data)
 {
+    if (s_touchBus && s_touchAddress != 0)
+    {
+        static const uint8_t request[] = {
+            0xB5, 0xAB, 0xA5, 0x5A, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00};
+
+        s_touchBus->beginTransmission(s_touchAddress);
+        s_touchBus->write(request, sizeof(request));
+        const uint8_t writeError = s_touchBus->endTransmission();
+
+        if (writeError == 0 && s_touchBus->requestFrom(s_touchAddress, (uint8_t)8) == 8)
+        {
+            uint8_t response[8];
+            for (uint8_t i = 0; i < sizeof(response); ++i)
+                response[i] = s_touchBus->read();
+
+            if (response[1] == 1)
+            {
+                s_touchX = ((response[2] & 0x0F) << 8) | response[3];
+                s_touchY = ((response[4] & 0x0F) << 8) | response[5];
+                s_touchX = constrain(s_touchX, 0, LCD_WIDTH - 1);
+                s_touchY = constrain(s_touchY, 0, LCD_HEIGHT - 1);
+                s_isPressed = true;
+            }
+            else if (response[1] == 0)
+            {
+                s_isPressed = false;
+            }
+        }
+    }
+
     data->point.x = s_touchX;
     data->point.y = s_touchY;
     data->state = s_isPressed ? LV_INDEV_STATE_PRESSED : LV_INDEV_STATE_RELEASED;
